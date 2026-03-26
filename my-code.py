@@ -58,14 +58,24 @@ class ExamSystem:
         try:
             with open(self.file_name, "r", encoding="utf-8") as file:
                 self.students = []
+                seen_student_ids = set()
+                duplicate_student_ids = set()
                 next(file, None)
 
                 for line in file:
                     try:
                         student = self.parse_student_line(line)
+                        if student.student_id in seen_student_ids:
+                            duplicate_student_ids.add(student.student_id)
+                            continue
+
+                        seen_student_ids.add(student.student_id)
                         self.students.append(student)
                     except ValueError:
                         continue
+                if duplicate_student_ids:
+                    duplicate_list = ", ".join(sorted(duplicate_student_ids))
+                    print(f"发现重复学号，已跳过重复记录：{duplicate_list}")
         except FileNotFoundError:
             print(f"文件不存在：{self.file_name}")
 
