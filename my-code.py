@@ -3,6 +3,9 @@ import random
 from datetime import datetime
 
 
+# 清理旧的准考证文本，避免历史结果残留。
+
+
 def clear_admission_ticket_files(folder_name):
     if not os.path.isdir(folder_name):
         return
@@ -13,6 +16,7 @@ def clear_admission_ticket_files(folder_name):
 
 
 class Student:
+    # 保存单个学生的基础信息。
     def __init__(self, student_id, name, gender, class_name, college):
         self.student_id = student_id
         self.name = name
@@ -28,10 +32,12 @@ class Student:
 
 
 class StudentDataConflictError(ValueError):
+    # 同一学号对应信息不一致时抛出此异常。
     pass
 
 
 class ExamSystem:
+    # 考试管理系统：负责导入、查询、排座和生成文件。
     def __init__(self, file_name="人工智能编程语言学生名单.txt"):
         self.file_name = file_name
         self.students = []
@@ -39,11 +45,13 @@ class ExamSystem:
 
     @staticmethod
     def validate_student_id(student_id):
+        # 学号必须是非空数字字符串。
         if not student_id:
             return False
         return student_id.isdigit()
 
     def parse_student_line(self, line):
+        # 将名单中的一行解析为 Student 对象。
         line = line.strip()
         if not line:
             raise ValueError("学生信息不能为空")
@@ -60,6 +68,7 @@ class ExamSystem:
 
     @staticmethod
     def get_student_conflict_fields(existing_student, current_student):
+        # 找出两条同学号记录中内容不一致的字段。
         field_pairs = [
             ("姓名", existing_student.name, current_student.name),
             ("性别", existing_student.gender, current_student.gender),
@@ -73,6 +82,7 @@ class ExamSystem:
         ]
 
     def load_students(self):
+        # 读取名单文件，并跳过无效数据与重复记录。
         try:
             with open(self.file_name, "r", encoding="utf-8") as file:
                 self.students = []
@@ -88,6 +98,7 @@ class ExamSystem:
                         student = self.parse_student_line(line)
                         existing_student = students_by_id.get(student.student_id)
                         if existing_student is not None:
+                            # 同一学号再次出现时，先判断是简单重复还是数据冲突。
                             conflict_fields = self.get_student_conflict_fields(
                                 existing_student, student
                             )
@@ -112,6 +123,7 @@ class ExamSystem:
                         print(f"导入失败：{error}")
                         raise SystemExit(1)
                     except ValueError as error:
+                        # 单行格式出错时只跳过当前行，不影响后续导入。
                         skipped_invalid_count += 1
                         print(f"第 {line_number} 行已跳过：{error}")
                 skipped_count = skipped_invalid_count + skipped_duplicate_count
@@ -125,12 +137,14 @@ class ExamSystem:
             print(f"文件不存在：{self.file_name}")
 
     def find_student_by_id(self, student_id):
+        # 按学号顺序查找学生。
         for student in self.students:
             if student.student_id == student_id:
                 return student
         return None
 
     def random_pick_students(self, count):
+        # 随机抽取指定数量的学生用于点名。
         if count <= 0:
             raise ValueError("抽取人数必须大于 0")
 
@@ -140,6 +154,7 @@ class ExamSystem:
         return random.sample(self.students, count)
 
     def generate_exam_seating(self):
+        # 打乱学生顺序后为每位学生分配座位号。
         shuffled_students = self.students[:]
         random.shuffle(shuffled_students)
 
@@ -154,6 +169,7 @@ class ExamSystem:
         if not self.exam_arrangement:
             raise ValueError("暂无考场安排可保存")
 
+        # 将排座结果导出到文本文件。
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(output_file, "w", encoding="utf-8") as file:
             file.write(f"生成时间：{current_time}\n")
@@ -169,6 +185,7 @@ class ExamSystem:
             raise ValueError("暂无考场安排可生成准考证")
 
         os.makedirs(folder_name, exist_ok=True)
+        # 先删除旧文件，保证目录里只保留本次结果。
         clear_admission_ticket_files(folder_name)
 
         for seat_number, student in self.exam_arrangement:
@@ -182,6 +199,7 @@ class ExamSystem:
 
 
 def main():
+    # 主程序入口：加载数据并循环处理菜单操作。
     exam_system = ExamSystem()
     exam_system.load_students()
 
@@ -204,6 +222,7 @@ def main():
             break
 
         if choice == "1":
+            # 查询功能：按学号精确查找学生。
             student_id = input("请输入要查找的学号：").strip()
             if not ExamSystem.validate_student_id(student_id):
                 print("输入的学号格式不正确。")
@@ -215,6 +234,7 @@ def main():
             else:
                 print(student)
         elif choice == "2":
+            # 点名功能：随机抽取指定人数。
             try:
                 count = int(input("请输入随机点名人数：").strip())
                 picked_students = exam_system.random_pick_students(count)
@@ -224,6 +244,7 @@ def main():
             except ValueError as error:
                 print(f"输入有误：{error}")
         elif choice == "3":
+            # 先生成座位表，再把结果保存到文件中。
             try:
                 seating_arrangement = exam_system.generate_exam_seating()
                 exam_system.save_exam_arrangement()
@@ -236,6 +257,7 @@ def main():
             except ValueError as error:
                 print(f"生成失败：{error}")
         elif choice == "4":
+            # 准考证依赖当前座位表，因此要先完成排座。
             try:
                 exam_system.generate_admission_tickets()
                 print("准考证已生成到 准考证 文件夹。")
