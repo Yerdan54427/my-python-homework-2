@@ -14,7 +14,7 @@ class Student:
 
 
 class ExamSystem:
-    def __init__(self, file_name):
+    def __init__(self, file_name="人工智能编程语言学生名单.txt"):
         self.file_name = file_name
         self.students = []
 
@@ -53,3 +53,9 @@ class ExamSystem:
                         continue
         except FileNotFoundError:
             print(f"文件不存在：{self.file_name}")
+
+    def find_student_by_id(self, student_id):
+        for student in self.students:
+            if student.student_id == student_id:
+                return student
+        return None
