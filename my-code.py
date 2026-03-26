@@ -1,3 +1,4 @@
+import os
 import random
 from datetime import datetime
 
@@ -98,3 +99,18 @@ class ExamSystem:
                 file.write(
                     f"{seat_number}\t{student.name}\t{student.student_id}\n"
                 )
+
+    def generate_admission_tickets(self, folder_name="准考证"):
+        if not self.exam_arrangement:
+            raise ValueError("暂无考场安排可生成准考证")
+
+        os.makedirs(folder_name, exist_ok=True)
+
+        for seat_number, student in self.exam_arrangement:
+            file_name = f"{seat_number:02d}.txt"
+            file_path = os.path.join(folder_name, file_name)
+
+            with open(file_path, "w", encoding="utf-8") as file:
+                file.write(f"座位号：{seat_number}\n")
+                file.write(f"姓名：{student.name}\n")
+                file.write(f"学号：{student.student_id}\n")
