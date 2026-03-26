@@ -71,3 +71,13 @@ class ExamSystem:
             raise ValueError("抽取人数不能超过学生总人数")
 
         return random.sample(self.students, count)
+
+    def generate_exam_seating(self):
+        shuffled_students = self.students[:]
+        random.shuffle(shuffled_students)
+
+        seating_arrangement = []
+        for seat_number, student in enumerate(shuffled_students, start=1):
+            seating_arrangement.append((seat_number, student))
+
+        return seating_arrangement
