@@ -18,6 +18,18 @@ class ExamSystem:
         self.file_name = file_name
         self.students = []
 
+    def parse_student_line(self, line):
+        line = line.strip()
+        if not line:
+            raise ValueError("学生信息不能为空")
+
+        parts = line.split("\t")
+        if len(parts) != 6:
+            raise ValueError("学生信息格式不合法")
+
+        _, name, gender, class_name, student_id, college = parts
+        return Student(student_id, name, gender, class_name, college)
+
     def load_students(self):
         try:
             with open(self.file_name, "r", encoding="utf-8") as file:
@@ -25,16 +37,10 @@ class ExamSystem:
                 next(file, None)
 
                 for line in file:
-                    line = line.strip()
-                    if not line:
+                    try:
+                        student = self.parse_student_line(line)
+                        self.students.append(student)
+                    except ValueError:
                         continue
-
-                    parts = line.split("\t")
-                    if len(parts) != 6:
-                        continue
-
-                    _, name, gender, class_name, student_id, college = parts
-                    student = Student(student_id, name, gender, class_name, college)
-                    self.students.append(student)
         except FileNotFoundError:
             print(f"文件不存在：{self.file_name}")
