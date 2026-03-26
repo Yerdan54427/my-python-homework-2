@@ -1,3 +1,6 @@
+import random
+
+
 class Student:
     def __init__(self, student_id, name, gender, class_name, college):
         self.student_id = student_id
@@ -59,3 +62,12 @@ class ExamSystem:
             if student.student_id == student_id:
                 return student
         return None
+
+    def random_pick_students(self, count):
+        if count <= 0:
+            raise ValueError("抽取人数必须大于 0")
+
+        if count > len(self.students):
+            raise ValueError("抽取人数不能超过学生总人数")
+
+        return random.sample(self.students, count)
