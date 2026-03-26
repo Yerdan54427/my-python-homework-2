@@ -1,4 +1,5 @@
 import random
+from datetime import datetime
 
 
 class Student:
@@ -20,6 +21,7 @@ class ExamSystem:
     def __init__(self, file_name="人工智能编程语言学生名单.txt"):
         self.file_name = file_name
         self.students = []
+        self.exam_arrangement = []
 
     @staticmethod
     def validate_student_id(student_id):
@@ -80,4 +82,19 @@ class ExamSystem:
         for seat_number, student in enumerate(shuffled_students, start=1):
             seating_arrangement.append((seat_number, student))
 
+        self.exam_arrangement = seating_arrangement
         return seating_arrangement
+
+    def save_exam_arrangement(self, output_file="考场安排.txt"):
+        if not self.exam_arrangement:
+            raise ValueError("暂无考场安排可保存")
+
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open(output_file, "w", encoding="utf-8") as file:
+            file.write(f"生成时间：{current_time}\n")
+            file.write("座位号\t姓名\t学号\n")
+
+            for seat_number, student in self.exam_arrangement:
+                file.write(
+                    f"{seat_number}\t{student.name}\t{student.student_id}\n"
+                )
