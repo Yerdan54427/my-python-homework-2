@@ -114,3 +114,74 @@ class ExamSystem:
                 file.write(f"座位号：{seat_number}\n")
                 file.write(f"姓名：{student.name}\n")
                 file.write(f"学号：{student.student_id}\n")
+
+
+def main():
+    exam_system = ExamSystem()
+    exam_system.load_students()
+
+    print("欢迎使用考试管理系统！")
+    if not exam_system.students:
+        print("当前未加载到学生信息，请检查学生名单文件。")
+
+    while True:
+        print("\n===== 主菜单 =====")
+        print("1. 查找学生")
+        print("2. 随机点名")
+        print("3. 生成考场安排表")
+        print("4. 生成准考证")
+        print("5. 退出系统")
+
+        try:
+            choice = input("请输入功能编号：").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n已退出系统。")
+            break
+
+        if choice == "1":
+            student_id = input("请输入要查找的学号：").strip()
+            if not ExamSystem.validate_student_id(student_id):
+                print("输入的学号格式不正确。")
+                continue
+
+            student = exam_system.find_student_by_id(student_id)
+            if student is None:
+                print("未找到该学生。")
+            else:
+                print(student)
+        elif choice == "2":
+            try:
+                count = int(input("请输入随机点名人数：").strip())
+                picked_students = exam_system.random_pick_students(count)
+                print("随机点名结果：")
+                for student in picked_students:
+                    print(student)
+            except ValueError as error:
+                print(f"输入有误：{error}")
+        elif choice == "3":
+            try:
+                seating_arrangement = exam_system.generate_exam_seating()
+                exam_system.save_exam_arrangement()
+                print("考场安排表已生成并保存到 考场安排.txt")
+                for seat_number, student in seating_arrangement:
+                    print(
+                        f"座位号：{seat_number}，姓名：{student.name}，"
+                        f"学号：{student.student_id}"
+                    )
+            except ValueError as error:
+                print(f"生成失败：{error}")
+        elif choice == "4":
+            try:
+                exam_system.generate_admission_tickets()
+                print("准考证已生成到 准考证 文件夹。")
+            except ValueError as error:
+                print(f"生成失败：{error}")
+        elif choice == "5":
+            print("已退出系统。")
+            break
+        else:
+            print("无效的菜单选项，请重新输入。")
+
+
+if __name__ == "__main__":
+    main()
