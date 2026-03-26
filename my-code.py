@@ -3,6 +3,15 @@ import random
 from datetime import datetime
 
 
+def clear_admission_ticket_files(folder_name):
+    if not os.path.isdir(folder_name):
+        return
+
+    for entry in os.scandir(folder_name):
+        if entry.is_file() and entry.name.lower().endswith(".txt"):
+            os.remove(entry.path)
+
+
 class Student:
     def __init__(self, student_id, name, gender, class_name, college):
         self.student_id = student_id
@@ -105,6 +114,7 @@ class ExamSystem:
             raise ValueError("暂无考场安排可生成准考证")
 
         os.makedirs(folder_name, exist_ok=True)
+        clear_admission_ticket_files(folder_name)
 
         for seat_number, student in self.exam_arrangement:
             file_name = f"{seat_number:02d}.txt"
