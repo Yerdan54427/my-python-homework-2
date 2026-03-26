@@ -18,6 +18,12 @@ class ExamSystem:
         self.file_name = file_name
         self.students = []
 
+    @staticmethod
+    def validate_student_id(student_id):
+        if not student_id:
+            return False
+        return student_id.isdigit()
+
     def parse_student_line(self, line):
         line = line.strip()
         if not line:
@@ -28,6 +34,9 @@ class ExamSystem:
             raise ValueError("学生信息格式不合法")
 
         _, name, gender, class_name, student_id, college = parts
+        if not self.validate_student_id(student_id):
+            raise ValueError("学号格式不合法")
+
         return Student(student_id, name, gender, class_name, college)
 
     def load_students(self):
