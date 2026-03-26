@@ -27,6 +27,10 @@ class Student:
         )
 
 
+class StudentDataConflictError(ValueError):
+    pass
+
+
 class ExamSystem:
     def __init__(self, file_name="人工智能编程语言学生名单.txt"):
         self.file_name = file_name
@@ -54,11 +58,25 @@ class ExamSystem:
 
         return Student(student_id, name, gender, class_name, college)
 
+    @staticmethod
+    def get_student_conflict_fields(existing_student, current_student):
+        field_pairs = [
+            ("姓名", existing_student.name, current_student.name),
+            ("性别", existing_student.gender, current_student.gender),
+            ("班级", existing_student.class_name, current_student.class_name),
+            ("学院", existing_student.college, current_student.college),
+        ]
+        return [
+            field_name
+            for field_name, existing_value, current_value in field_pairs
+            if existing_value != current_value
+        ]
+
     def load_students(self):
         try:
             with open(self.file_name, "r", encoding="utf-8") as file:
                 self.students = []
-                seen_student_ids = set()
+                students_by_id = {}
                 duplicate_student_ids = set()
                 loaded_count = 0
                 skipped_invalid_count = 0
@@ -68,7 +86,18 @@ class ExamSystem:
                 for line_number, line in enumerate(file, start=2):
                     try:
                         student = self.parse_student_line(line)
-                        if student.student_id in seen_student_ids:
+                        existing_student = students_by_id.get(student.student_id)
+                        if existing_student is not None:
+                            conflict_fields = self.get_student_conflict_fields(
+                                existing_student, student
+                            )
+                            if conflict_fields:
+                                conflict_fields_text = "、".join(conflict_fields)
+                                raise StudentDataConflictError(
+                                    f"第 {line_number} 行数据冲突：学号 "
+                                    f"{student.student_id} 的{conflict_fields_text}不一致"
+                                )
+
                             duplicate_student_ids.add(student.student_id)
                             skipped_duplicate_count += 1
                             print(
@@ -76,9 +105,12 @@ class ExamSystem:
                             )
                             continue
 
-                        seen_student_ids.add(student.student_id)
+                        students_by_id[student.student_id] = student
                         self.students.append(student)
                         loaded_count += 1
+                    except StudentDataConflictError as error:
+                        print(f"导入失败：{error}")
+                        raise SystemExit(1)
                     except ValueError as error:
                         skipped_invalid_count += 1
                         print(f"第 {line_number} 行已跳过：{error}")
