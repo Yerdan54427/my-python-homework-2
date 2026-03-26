@@ -60,19 +60,32 @@ class ExamSystem:
                 self.students = []
                 seen_student_ids = set()
                 duplicate_student_ids = set()
+                loaded_count = 0
+                skipped_invalid_count = 0
+                skipped_duplicate_count = 0
                 next(file, None)
 
-                for line in file:
+                for line_number, line in enumerate(file, start=2):
                     try:
                         student = self.parse_student_line(line)
                         if student.student_id in seen_student_ids:
                             duplicate_student_ids.add(student.student_id)
+                            skipped_duplicate_count += 1
+                            print(
+                                f"第 {line_number} 行已跳过：学号 {student.student_id} 重复"
+                            )
                             continue
 
                         seen_student_ids.add(student.student_id)
                         self.students.append(student)
-                    except ValueError:
-                        continue
+                        loaded_count += 1
+                    except ValueError as error:
+                        skipped_invalid_count += 1
+                        print(f"第 {line_number} 行已跳过：{error}")
+                skipped_count = skipped_invalid_count + skipped_duplicate_count
+                print(
+                    f"导入完成：成功导入 {loaded_count} 条，跳过 {skipped_count} 条。"
+                )
                 if duplicate_student_ids:
                     duplicate_list = ", ".join(sorted(duplicate_student_ids))
                     print(f"发现重复学号，已跳过重复记录：{duplicate_list}")
